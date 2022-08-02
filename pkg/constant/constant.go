@@ -29,24 +29,26 @@ const (
 
 const (
 	//ContentType
-	Text                = 101
-	Picture             = 102
-	Voice               = 103
-	Video               = 104
-	File                = 105
-	AtText              = 106
-	Merger              = 107
-	Card                = 108
-	Location            = 109
-	Custom              = 110
-	Revoke              = 111 //影响前者消息
-	HasReadReceipt      = 112 //影响前者消息
-	Typing              = 113
-	Quote               = 114
-	Face                = 115
-	GroupHasReadReceipt = 116 //影响前者消息
-	AdvancedText        = 117
-	AdvancedRevoke      = 118 //影响前者消息
+	Text                            = 101
+	Picture                         = 102
+	Voice                           = 103
+	Video                           = 104
+	File                            = 105
+	AtText                          = 106
+	Merger                          = 107
+	Card                            = 108
+	Location                        = 109
+	Custom                          = 110
+	Revoke                          = 111 //影响前者消息
+	HasReadReceipt                  = 112 //影响前者消息
+	Typing                          = 113
+	Quote                           = 114
+	Face                            = 115
+	GroupHasReadReceipt             = 116 //影响前者消息
+	AdvancedText                    = 117
+	AdvancedRevoke                  = 118 //影响前者消息
+	CustomMsgNotTriggerConversation = 119
+	CustomMsgOnlineOnly             = 120
 	//////////////////////////////////////////
 	NotificationBegin       = 1000
 	FriendNotificationBegin = 1200
@@ -212,6 +214,8 @@ const (
 	UpdateLatestMessageChange = 8
 	ConChange                 = 9
 	NewCon                    = 10
+	ConChangeDirect           = 11
+	NewConDirect              = 12
 
 	HasRead = 1
 	NotRead = 0
@@ -303,6 +307,7 @@ const (
 	FieldGroupAtType   = 5
 	FieldIsNotInGroup  = 6
 	FieldEx            = 7
+	FieldUnread        = 8
 )
 const (
 	KeywordMatchOr  = 0
@@ -320,6 +325,10 @@ const (
 	MsgSyncModelDefault  = 0   //SyncFlag
 	MsgSyncModelLogin    = 1   //SyncFlag
 	SyncOrderStartLatest = 101 //PullMsgOrder
+
+	MsgSyncBegin      = 1001 //
+	MsgSyncProcessing = 1002 //
+	MsgSyncEnd        = 1003 //
 )
 
 const (

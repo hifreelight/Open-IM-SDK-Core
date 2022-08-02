@@ -574,7 +574,7 @@ func (c *Conversation) SendMessage(callback open_im_sdk_callback.SendMsgCallBack
 			common.JsonUnmarshalAndArgsValidate(offlinePushInfo, &p, callback, operationID)
 		}
 		if recvID == "" && groupID == "" {
-			common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not be allowed"), operationID)
+			common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not both null"), operationID)
 		}
 		var localMessage model_struct.LocalChatLog
 		var conversationID string
@@ -725,6 +725,7 @@ func (c *Conversation) SendMessage(callback open_im_sdk_callback.SendMsgCallBack
 			case constant.Quote:
 			case constant.Card:
 			case constant.Face:
+			case constant.AdvancedText:
 			default:
 				common.CheckAnyErrCallback(callback, 202, errors.New("contentType not currently supported"+utils.Int32ToString(s.ContentType)), operationID)
 			}
@@ -760,7 +761,7 @@ func (c *Conversation) SendMessageNotOss(callback open_im_sdk_callback.SendMsgCa
 			common.JsonUnmarshalAndArgsValidate(offlinePushInfo, &p, callback, operationID)
 		}
 		if recvID == "" && groupID == "" {
-			common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not be allowed"), operationID)
+			common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not both null"), operationID)
 		}
 		var localMessage model_struct.LocalChatLog
 		var conversationID string
@@ -849,7 +850,7 @@ func (c *Conversation) SendMessageNotOss(callback open_im_sdk_callback.SendMsgCa
 
 func (c *Conversation) InternalSendMessage(callback open_im_sdk_callback.Base, s *sdk_struct.MsgStruct, recvID, groupID, operationID string, p *server_api_params.OfflinePushInfo, onlineUserOnly bool, options map[string]bool) (*server_api_params.UserSendMsgResp, error) {
 	if recvID == "" && groupID == "" {
-		common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not be allowed"), operationID)
+		common.CheckAnyErrCallback(callback, 201, errors.New("recvID && groupID not both null"), operationID)
 	}
 	if recvID == "" {
 		g, err := c.full.GetGroupInfoByGroupID(groupID)
@@ -1076,6 +1077,20 @@ func (c *Conversation) CreateForwardMessage(m, operationID string) string {
 	s.Status = constant.MsgStatusSendSuccess
 	return utils.StructToJsonString(s)
 }
+func (c *Conversation) FindMessageList(callback open_im_sdk_callback.Base, findMessageOptions, operationID string) {
+	if callback == nil {
+		return
+	}
+	go func() {
+		t := time.Now()
+		log.NewInfo(operationID, "FindMessageList args: ", findMessageOptions)
+		var unmarshalParams sdk_params_callback.FindMessageListParams
+		common.JsonUnmarshalCallback(findMessageOptions, &unmarshalParams, callback, operationID)
+		result := c.findMessageList(callback, unmarshalParams, operationID, false)
+		callback.OnSuccess(utils.StructToJsonStringDefault(result))
+		log.NewInfo(operationID, "FindMessageList callback: ", utils.StructToJsonStringDefault(result), "cost time", time.Since(t))
+	}()
+}
 func (c *Conversation) GetHistoryMessageList(callback open_im_sdk_callback.Base, getMessageOptions, operationID string) {
 	if callback == nil {
 		return
@@ -1090,7 +1105,6 @@ func (c *Conversation) GetHistoryMessageList(callback open_im_sdk_callback.Base,
 		log.NewInfo(operationID, "GetHistoryMessageList callback: ", utils.StructToJsonStringDefault(result), "cost time", time.Since(t))
 	}()
 }
-
 func (c *Conversation) GetAdvancedHistoryMessageList(callback open_im_sdk_callback.Base, getMessageOptions, operationID string) {
 	if callback == nil {
 		return
@@ -1167,6 +1181,7 @@ func (c *Conversation) MarkC2CMessageAsRead(callback open_im_sdk_callback.Base, 
 		common.JsonUnmarshalCallback(msgIDList, &unmarshalParams, callback, operationID)
 		if len(unmarshalParams) == 0 {
 			conversationID := utils.GetConversationIDBySessionType(userID, constant.SingleChatType)
+			c.setOneConversationUnread(callback, conversationID, 0, operationID)
 			_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.UnreadCountSetZero}, c.GetCh())
 			_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.ConChange, Args: []string{conversationID}}, c.GetCh())
 			callback.OnSuccess(sdk_params_callback.MarkC2CMessageAsReadCallback)
@@ -1188,6 +1203,7 @@ func (c *Conversation) MarkMessageAsReadByConID(callback open_im_sdk_callback.Ba
 		var unmarshalParams sdk_params_callback.MarkMessageAsReadByConIDParams
 		common.JsonUnmarshalCallback(msgIDList, &unmarshalParams, callback, operationID)
 		if len(unmarshalParams) == 0 {
+			c.setOneConversationUnread(callback, conversationID, 0, operationID)
 			_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.UnreadCountSetZero}, c.GetCh())
 			_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.ConChange, Args: []string{conversationID}}, c.GetCh())
 			callback.OnSuccess(sdk_params_callback.MarkMessageAsReadByConIDCallback)
@@ -1223,6 +1239,7 @@ func (c *Conversation) MarkGroupMessageHasRead(callback open_im_sdk_callback.Bas
 	go func() {
 		log.NewInfo(operationID, "MarkGroupMessageHasRead args: ", groupID)
 		conversationID := utils.GetConversationIDBySessionType(groupID, constant.GroupChatType)
+		c.setOneConversationUnread(callback, conversationID, 0, operationID)
 		_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.UnreadCountSetZero}, c.GetCh())
 		_ = common.TriggerCmdUpdateConversation(common.UpdateConNode{ConID: conversationID, Action: constant.ConChange, Args: []string{conversationID}}, c.GetCh())
 		callback.OnSuccess(sdk_params_callback.MarkGroupMessageHasReadCallback)
@@ -1378,6 +1395,8 @@ func (c *Conversation) InsertGroupMessageToLocalStorage(callback open_im_sdk_cal
 	}()
 
 }
+
+//modifyLocalMessages(callback open_im_sdk_callback.Base, message, groupID, sendID, operationID string)
 
 func (c *Conversation) SetConversationStatus(callback open_im_sdk_callback.Base, operationID string, userID string, status int) {
 	if callback == nil {
