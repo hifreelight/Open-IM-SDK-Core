@@ -41,6 +41,7 @@ type LocalFriend struct {
 	PhoneNumber    string `gorm:"column:phone_number;type:varchar(32)" json:"phoneNumber"`
 	Birth          uint32 `gorm:"column:birth" json:"birth"`
 	Email          string `gorm:"column:email;type:varchar(64)" json:"email"`
+	PubKey         string `gorm:"column:pub_key;type:varchar(255)" json:"pubKey"`
 	Ex             string `gorm:"column:ex;type:varchar(1024)" json:"ex"`
 	AttachedInfo   string `gorm:"column:attached_info;type:varchar(1024)" json:"attachedInfo"`
 }
@@ -67,6 +68,7 @@ type LocalFriendRequest struct {
 	ToNickname string `gorm:"column:to_nickname;type:varchar;type:varchar(255)" json:"toNickname"`
 	ToFaceURL  string `gorm:"column:to_face_url;type:varchar;type:varchar(255)" json:"toFaceURL"`
 	ToGender   int32  `gorm:"column:to_gender" json:"toGender"`
+	ToPubKey   string `gorm:"column:to_pub_key" json:"toPubKey"`
 
 	HandleResult  int32  `gorm:"column:handle_result" json:"handleResult"`
 	ReqMsg        string `gorm:"column:req_msg;type:varchar(255)" json:"reqMsg"`
@@ -226,6 +228,7 @@ type LocalUser struct {
 	PhoneNumber      string `gorm:"column:phone_number;type:varchar(32)" json:"phoneNumber"`
 	Birth            uint32 `gorm:"column:birth" json:"birth"`
 	Email            string `gorm:"column:email;type:varchar(64)" json:"email"`
+	PubKey           string `gorm:"column:pub_key;type:varchar(255)" json:"pubKey"`
 	CreateTime       uint32 `gorm:"column:create_time" json:"createTime"`
 	AppMangerLevel   int32  `gorm:"column:app_manger_level" json:"-"`
 	Ex               string `gorm:"column:ex;type:varchar(1024)" json:"ex"`

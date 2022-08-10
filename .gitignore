@@ -1,0 +1,3 @@
+ws_wrapper/logs/sdk.all.*
+ws_wrapper/cmd/*.db
+ws_wrapper/cmd/__debug_bin.exe
