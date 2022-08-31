@@ -9,7 +9,6 @@ package ws_local_server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"open_im_sdk/open_im_sdk"
 	"open_im_sdk/pkg/log"
@@ -19,6 +18,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const POINTNUM = 10
