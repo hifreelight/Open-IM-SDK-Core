@@ -695,6 +695,7 @@ func (c *Conversation) getAdvancedHistoryMessageList(callback open_im_sdk_callba
 				}
 			}
 		}
+		log.Debug(operationID, "from server min seq is", minSeq)
 		seq, _ := c.db.SuperGroupGetNormalMinSeq(sourceID)
 		log.Debug(operationID, sourceID+":table min seq is ", seq)
 		if seq != 0 && seq != 1 && seq > minSeq {
@@ -715,7 +716,10 @@ func (c *Conversation) getAdvancedHistoryMessageList(callback open_im_sdk_callba
 				c.pullMessageAndReGetHistoryMessages(sourceID, seqList, notStartTime, isReverse, req.Count, sessionType, startTime, &list, &messageListCallback, operationID)
 			}
 		} else {
-			messageListCallback.IsEnd = true
+			_, _, haveSeqList := c.getMaxAndMinHaveSeqList(list)
+			if utils.IsContainUInt32(minSeq, haveSeqList) {
+				messageListCallback.IsEnd = true
+			}
 		}
 	} else if len(list) == req.Count && sessionType == constant.SuperGroupChatType {
 		maxSeq, minSeq, haveSeqList := func(messages []*model_struct.LocalChatLog) (max, min uint32, seqList []uint32) {

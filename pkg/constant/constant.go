@@ -206,16 +206,17 @@ const (
 )
 
 const (
-	AddConOrUpLatMsg          = 2
-	UnreadCountSetZero        = 3
-	IncrUnread                = 5
-	TotalUnreadMessageChanged = 6
-	UpdateFaceUrlAndNickName  = 7
-	UpdateLatestMessageChange = 8
-	ConChange                 = 9
-	NewCon                    = 10
-	ConChangeDirect           = 11
-	NewConDirect              = 12
+	AddConOrUpLatMsg             = 2
+	UnreadCountSetZero           = 3
+	IncrUnread                   = 5
+	TotalUnreadMessageChanged    = 6
+	UpdateFaceUrlAndNickName     = 7
+	UpdateLatestMessageChange    = 8
+	ConChange                    = 9
+	NewCon                       = 10
+	ConChangeDirect              = 11
+	NewConDirect                 = 12
+	ConversationLatestMsgHasRead = 13
 
 	HasRead = 1
 	NotRead = 0
@@ -280,11 +281,12 @@ const (
 	AppOrdinaryUsers = 1
 	AppAdmin         = 2
 
-	GroupOrdinaryUsers  = 1
-	GroupOwner          = 2
-	GroupAdmin          = 3
-	GroupResponseAgree  = 1
-	GroupResponseRefuse = -1
+	GroupOrdinaryUsers         = 1
+	GroupOwner                 = 2
+	GroupAdmin                 = 3
+	GroupAdminAndOrdinaryUsers = 4
+	GroupResponseAgree         = 1
+	GroupResponseRefuse        = -1
 
 	FriendResponseAgree  = 1
 	FriendResponseRefuse = -1
@@ -337,7 +339,7 @@ const (
 	JoinByQRCode     = 4
 )
 const (
-	SplitPullMsgNum              = 1000
+	SplitPullMsgNum              = 100
 	PullMsgNumWhenLogin          = 10000
 	PullMsgNumForReadDiffusion   = 100
 	NormalMsgMinNumReadDiffusion = 100

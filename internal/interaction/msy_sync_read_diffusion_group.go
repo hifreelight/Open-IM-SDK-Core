@@ -34,7 +34,7 @@ func NewReadDiffusionGroupMsgSync(dataBase *db.DataBase, ws *Ws, loginUserID str
 	return p
 }
 
-//协程方式加锁获取读扩散群列表
+//协程方式加锁获取读扩散群列表 ok
 func (m *ReadDiffusionGroupMsgSync) updateJoinedSuperGroup() {
 	for {
 		select {
@@ -55,7 +55,7 @@ func (m *ReadDiffusionGroupMsgSync) updateJoinedSuperGroup() {
 	}
 }
 
-//读取所有的读扩散群id，并加载seq到map中，初始化调用一次， 群列表变化时调用一次
+//读取所有的读扩散群id，并加载seq到map中，初始化调用一次， 群列表变化时调用一次  ok
 func (m *ReadDiffusionGroupMsgSync) compareSeq(operationID string) {
 	g, err := m.GetReadDiffusionGroupIDList()
 	if err != nil {
@@ -121,7 +121,7 @@ func (m *ReadDiffusionGroupMsgSync) doMaxSeq(cmd common.Cmd2Value) {
 	m.syncMsgFroAllGroup(operationID)
 }
 
-//在获取最大seq后同步最新消息，只调用一次
+//在获取最大seq后同步最新消息，只调用一次 ok
 func (m *ReadDiffusionGroupMsgSync) syncLatestMsg(operationID string) {
 	m.superGroupMtx.Lock()
 	flag := 0
@@ -153,6 +153,7 @@ func (m *ReadDiffusionGroupMsgSync) syncLatestMsg(operationID string) {
 
 //获取某个群的最新消息，只调用一次
 func (m *ReadDiffusionGroupMsgSync) syncLatestMsgForGroup(groupID, operationID string, loginSync int) {
+	log.NewDebug(operationID, utils.GetSelfFuncName(), "syncLatestMsgForGroup start", groupID, loginSync, m.Group2SyncMsgFinished[groupID], m.Group2SeqMaxNeedSync[groupID], m.Group2SeqMaxSynchronized[groupID])
 	if !m.Group2SyncMsgFinished[groupID] {
 		need := m.Group2SeqMaxNeedSync[groupID]
 		synchronized := m.Group2SeqMaxSynchronized[groupID]
@@ -174,7 +175,7 @@ func (m *ReadDiffusionGroupMsgSync) syncLatestMsgForGroup(groupID, operationID s
 func (m *ReadDiffusionGroupMsgSync) doPushMsg(cmd common.Cmd2Value) {
 	msg := cmd.Value.(sdk_struct.CmdPushMsgToMsgSync).Msg
 	operationID := cmd.Value.(sdk_struct.CmdPushMsgToMsgSync).OperationID
-	log.Debug(operationID, "recv super group push msg, doPushMsg ", msg.Seq, msg.ServerMsgID, msg.ClientMsgID, msg.GroupID, msg.SessionType)
+	log.Debug(operationID, "recv super group push msg, doPushMsg ", msg.Seq, msg.ServerMsgID, msg.ClientMsgID, msg.GroupID, msg.SessionType, m.Group2SeqMaxSynchronized[msg.GroupID], m.Group2SeqMaxNeedSync[msg.GroupID], m.loginUserID)
 	if msg.Seq == 0 {
 		m.TriggerCmdNewMsgCome([]*server_api_params.MsgData{msg}, operationID, 0)
 		return
@@ -195,7 +196,7 @@ func (m *ReadDiffusionGroupMsgSync) doPushMsg(cmd common.Cmd2Value) {
 	m.syncMsgForOneGroup(operationID, msg.GroupID)
 }
 
-//同步所有群的新消息
+//同步所有群的新消息 ok
 func (m *ReadDiffusionGroupMsgSync) syncMsgFroAllGroup(operationID string) {
 	m.superGroupMtx.Lock()
 	for _, v := range m.SuperGroupIDList {
@@ -215,11 +216,12 @@ func (m *ReadDiffusionGroupMsgSync) syncMsgFroAllGroup(operationID string) {
 	m.superGroupMtx.Unlock()
 }
 
-//同步某个群的新消息
+//同步某个群的新消息 ok
 func (m *ReadDiffusionGroupMsgSync) syncMsgForOneGroup(operationID string, groupID string) {
+	log.NewDebug(operationID, utils.GetSelfFuncName(), "syncMsgForOneGroup start", groupID)
 	m.superGroupMtx.Lock()
 	for _, v := range m.SuperGroupIDList {
-		if groupID != "" && v == groupID {
+		if groupID != "" && v != groupID {
 			continue
 		}
 		seqMaxNeedSync := m.Group2SeqMaxNeedSync[v]
@@ -228,10 +230,13 @@ func (m *ReadDiffusionGroupMsgSync) syncMsgForOneGroup(operationID string, group
 			log.Info(operationID, "do syncMsg ", seqMaxSynchronized+1, seqMaxNeedSync)
 			m.syncMsgFromServer(seqMaxSynchronized+1, seqMaxNeedSync, v, operationID, 0)
 			m.Group2SeqMaxSynchronized[v] = seqMaxNeedSync
+		} else {
+			log.NewDebug(operationID, "msg not sync", seqMaxNeedSync, seqMaxSynchronized)
 		}
 		break
 	}
 	m.superGroupMtx.Unlock()
+	log.NewDebug(operationID, utils.GetSelfFuncName(), "syncMsgForOneGroup end", groupID)
 }
 
 func (m *ReadDiffusionGroupMsgSync) syncMsgFromServer(beginSeq, endSeq uint32, groupID, operationID string, loginSync int) {
