@@ -2,8 +2,6 @@ package interaction
 
 import (
 	"errors"
-	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
 	"open_im_sdk/pkg/common"
 	"open_im_sdk/pkg/constant"
 	"open_im_sdk/pkg/log"
@@ -11,6 +9,9 @@ import (
 	"open_im_sdk/pkg/utils"
 	"open_im_sdk/sdk_struct"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/gorilla/websocket"
 )
 
 type Ws struct {
@@ -210,7 +211,7 @@ func (w *Ws) ReadData() {
 			}
 			if w.WsConn.IsFatalError(err) {
 				log.Error(operationID, "IsFatalError ", err.Error(), "ReConn")
-				err, isNeedReConnect := w.reConnSleep(operationID, 5)
+					err, isNeedReConnect := w.reConnSleep(operationID, 5)
 				if err != nil && isNeedReConnect == false {
 					log.Warn(operationID, "token failed, don't connect again")
 					return
