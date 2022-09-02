@@ -11,6 +11,14 @@
             "mode": "debug",
             "program": "${file}",
             "args": ["-openIM_api_port", "10002", "-openIM_ws_port", "10001", "-sdk_ws_port", "10003", "-openIM_log_level", "2"]
+        },
+        {
+            "name": "server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "ws_wrapper/cmd/open_im_sdk_server.go",
+            "args": ["-openIM_api_port", "10002", "-openIM_ws_port", "10001", "-sdk_ws_port", "10003", "-openIM_log_level", "2"]
         }
 
     ]
