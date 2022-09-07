@@ -102,6 +102,24 @@ func GroupMemberCopyToLocal(dst *model_struct.LocalGroupMember, src *server_api_
 	copier.Copy(dst, src)
 }
 
+func TransferToLocalGroupKey(apiData []*server_api_params.GroupKey) []*model_struct.LocalGroupKey {
+	local := make([]*model_struct.LocalGroupKey, 0)
+	//operationID := utils.OperationIDGenerator()
+	for _, v := range apiData {
+		var node model_struct.LocalGroupKey
+		//		log2.NewDebug(operationID, "local test api ", v)
+		GroupKeyCopyToLocal(&node, v)
+		//		log2.NewDebug(operationID, "local test local  ", node)
+		local = append(local, &node)
+	}
+	//	log2.NewDebug(operationID, "local test local all ", local)
+	return local
+}
+
+func GroupKeyCopyToLocal(dst *model_struct.LocalGroupKey, src *server_api_params.GroupKey) {
+	copier.Copy(dst, src)
+}
+
 func TransferToLocalGroupInfo(apiData []*server_api_params.GroupInfo) []*model_struct.LocalGroup {
 	local := make([]*model_struct.LocalGroup, 0)
 	//operationID := utils.OperationIDGenerator()
@@ -416,6 +434,52 @@ func CheckGroupMemberDiff(a []*model_struct.LocalGroupMember, b []*model_struct.
 	//for b
 	for i, v := range b {
 		ib, ok := mapA[v.GroupID+v.UserID]
+		if !ok {
+			bInANot = append(bInANot, i)
+		} else {
+			if !cmp.Equal(v, ib) {
+				sameB = append(sameB, i)
+			}
+		}
+	}
+	return aInBNot, bInANot, sameA, sameB
+}
+
+func CheckGroupKeyDiff(a []*model_struct.LocalGroupKey, b []*model_struct.LocalGroupKey) (aInBNot, bInANot, sameA, sameB []int) {
+	//to map, friendid_>friendinfo
+	mapA := make(map[string]*model_struct.LocalGroupKey)
+	for _, v := range a {
+		mapA[v.GroupID+v.Key] = v
+	}
+	mapB := make(map[string]*model_struct.LocalGroupKey)
+	for _, v := range b {
+		mapB[v.GroupID+v.Key] = v
+	}
+
+	aInBNot = make([]int, 0)
+	bInANot = make([]int, 0)
+	sameA = make([]int, 0)
+	sameB = make([]int, 0)
+
+	//for a
+	for i, v := range a {
+		ia, ok := mapB[v.GroupID+v.Key]
+		if !ok {
+			//in a, but not in b
+			aInBNot = append(aInBNot, i)
+		} else {
+			//reflect.DeepEqual(a, b)
+			//	reflect.DeepEqual(v, ia)
+			//if !cmp.Equal(v, ia)
+			if !cmp.Equal(v, ia) {
+				// key of a and b is equal, but value different
+				sameA = append(sameA, i)
+			}
+		}
+	}
+	//for b
+	for i, v := range b {
+		ib, ok := mapA[v.GroupID+v.Key]
 		if !ok {
 			bInANot = append(bInANot, i)
 		} else {

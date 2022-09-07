@@ -2,15 +2,16 @@ package db
 
 import (
 	"errors"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"open_im_sdk/pkg/constant"
 	"open_im_sdk/pkg/db/model_struct"
 	"open_im_sdk/pkg/log"
 	"open_im_sdk/pkg/utils"
 	"sync"
 	"time"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var UserDBMap map[string]*DataBase
@@ -133,6 +134,7 @@ func (d *DataBase) initDB() error {
 		&model_struct.LocalFriendRequest{},
 		localGroup,
 		&model_struct.LocalGroupMember{},
+		&model_struct.LocalGroupKey{},
 		&model_struct.LocalGroupRequest{},
 		&model_struct.LocalErrChatLog{},
 		&model_struct.LocalUser{},
@@ -166,6 +168,11 @@ func (d *DataBase) initDB() error {
 	if !db.Migrator().HasTable(&model_struct.LocalGroupMember{}) {
 		//log.NewInfo("CreateTable GroupMember")
 		db.Migrator().CreateTable(&model_struct.LocalGroupMember{})
+	}
+
+	if !db.Migrator().HasTable(&model_struct.LocalGroupKey{}) {
+		//log.NewInfo("CreateTable GroupMember")
+		db.Migrator().CreateTable(&model_struct.LocalGroupKey{})
 	}
 
 	if !db.Migrator().HasTable(&model_struct.LocalGroupRequest{}) {

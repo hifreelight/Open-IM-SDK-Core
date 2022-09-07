@@ -365,6 +365,11 @@ func (u *LoginMgr) forcedSynchronization() {
 		wg.Done()
 	}()
 
+	// go func() {
+	// 	u.group.SyncJoinedGroupKeyForFirstLogin(operationID)
+	// 	wg.Done()
+	// }()
+
 	go func() {
 		u.organization.SyncOrganization(operationID)
 		wg.Done()

@@ -6,6 +6,7 @@ import (
 	ws "open_im_sdk/internal/interaction"
 	"open_im_sdk/open_im_sdk_callback"
 	"open_im_sdk/pkg/common"
+	"open_im_sdk/pkg/common/config"
 	"open_im_sdk/pkg/constant"
 	"open_im_sdk/pkg/db"
 	"open_im_sdk/pkg/db/model_struct"
@@ -306,6 +307,7 @@ func (g *Group) createGroup(callback open_im_sdk_callback.Base, group sdk.Create
 	m := utils.JsonDataOne(&realData.GroupInfo)
 	g.SyncJoinedGroupList(operationID)
 	g.syncGroupMemberByGroupID(realData.GroupInfo.GroupID, operationID, false)
+	// g.syncGroupKeyByGroupID(realData.GroupInfo.GroupID, operationID, false)
 	return (*sdk.CreateGroupCallback)(&m)
 }
 
@@ -336,6 +338,7 @@ func (g *Group) quitGroup(groupID string, callback open_im_sdk_callback.Base, op
 	g.p.PostFatalCallback(callback, constant.QuitGroupRouter, apiReq, nil, apiReq.OperationID)
 	//	g.syncGroupMemberByGroupID(groupID, operationID, false) //todo
 	g.SyncJoinedGroupList(operationID)
+	// g.syncGroupKeyByGroupID(groupID, operationID, false)
 }
 
 func (g *Group) dismissGroup(groupID string, callback open_im_sdk_callback.Base, operationID string) {
@@ -537,6 +540,7 @@ func (g *Group) kickGroupMember(callback open_im_sdk_callback.Base, groupID stri
 	g.p.PostFatalCallback(callback, constant.KickGroupMemberRouter, apiReq, &realData.UserIDResultList, apiReq.OperationID)
 	g.SyncJoinedGroupList(operationID)
 	g.syncGroupMemberByGroupID(groupID, operationID, true)
+	// g.syncGroupKeyByGroupID(groupID, operationID, true)
 	return realData.UserIDResultList
 }
 
@@ -939,6 +943,7 @@ func (g *Group) syncGroupMemberByGroupID(groupID string, operationID string, onG
 		if remain > 0 {
 			sub := insertGroupMemberList[idx*split:]
 			log.Warn(operationID, "BatchInsertGroupMember len: ", len(sub))
+			err = g.db.BatchInsertGroupMember(sub)
 			if err != nil {
 				log.Error(operationID, "BatchInsertGroupMember failed ", err.Error(), len(sub))
 				for again := 0; again < len(sub); again++ {
@@ -1015,12 +1020,38 @@ func (g *Group) SyncJoinedGroupMemberForFirstLogin(operationID string) {
 	for _, v := range groupListOnServer {
 		go func(groupID, operationID string) {
 			g.syncGroupMemberByGroupID(groupID, operationID, false)
+			g.syncGroupKeyByGroupID(groupID, operationID, false)
+			wg.Done()
+		}(v.GroupID, operationID)
+
+	}
+
+	wg.Wait()
+	log.Info(operationID, "syncGroupMemberByGroupID end")
+}
+
+func (g *Group) SyncJoinedGroupKeyForFirstLogin(operationID string) {
+	log.NewInfo(operationID, utils.GetSelfFuncName(), "args: ")
+	groupListOnServer, err := g.getJoinedGroupListFromSvr(operationID)
+	if err != nil {
+		log.Error(operationID, "getJoinedGroupListFromSvr failed ", err.Error())
+		return
+	}
+	var wg sync.WaitGroup
+	if len(groupListOnServer) == 0 {
+		return
+	}
+	wg.Add(len(groupListOnServer))
+	log.Info(operationID, "syncGroupKeyByGroupID begin", len(groupListOnServer))
+	for _, v := range groupListOnServer {
+		go func(groupID, operationID string) {
+			// g.syncGroupKeyByGroupID(groupID, operationID, false)
 			wg.Done()
 		}(v.GroupID, operationID)
 	}
 
 	wg.Wait()
-	log.Info(operationID, "syncGroupMemberByGroupID end")
+	log.Info(operationID, "syncGroupKeyByGroupID end")
 }
 
 func (g *Group) getGroupAllMemberByGroupIDFromSvr(groupID string, operationID string) ([]*api.GroupMemberFullInfo, error) {
@@ -1053,4 +1084,104 @@ func (g *Group) searchGroupMembers(callback open_im_sdk_callback.Base, searchPar
 	members, err := g.db.SearchGroupMembers(searchParam.KeywordList[0], searchParam.GroupID, searchParam.IsSearchMemberNickname, searchParam.IsSearchUserID, searchParam.Offset, searchParam.Count)
 	common.CheckDBErrCallback(callback, err, operationID)
 	return members
+}
+
+// func (g *Group) GetGroupKeyList(callback open_im_sdk_callback.Base, groupID string, userIDList sdk.GetGroupKeyParam, operationID string) sdk.GetGroupKeyCallback {
+// 	groupKeyList, err := g.db.GetGroupKeyListByGroupID(groupID)
+// 	common.CheckDBErrCallback(callback, err, operationID)
+// 	return groupKeyList
+// }
+
+func (g *Group) GetGroupKeyList(callback open_im_sdk_callback.Base, groupID string, userIDList sdk.GetGroupKeyParam, operationID string) sdk.GetGroupKeyCallback {
+	// TODO: in group ?
+	// encrypt
+	groupKeyList, err := g.db.GetGroupKeyListByGroupID(groupID)
+	common.CheckDBErrCallback(callback, err, operationID)
+	return groupKeyList
+}
+
+func (g *Group) getGroupKeyByGroupIDFromSvr(groupID string, operationID string) ([]*api.GroupKey, error) {
+	var apiReq api.GetNoEncryptGroupKeyListReq
+	apiReq.AdminName = config.Config.Manager.AppManagerUid[0]
+	apiReq.Secret = config.Config.Manager.Secrets[0]
+	apiReq.OperationID = operationID
+	apiReq.GroupID = groupID
+	apiReq.Start = 0
+	apiReq.Limit = 100
+	var realData []*api.GroupKey
+	err := g.p.PostReturn(constant.GetNoEncryptGroupKeyListRouter, apiReq, &realData)
+	if err != nil {
+		return nil, utils.Wrap(err, apiReq.OperationID)
+	}
+	return realData, nil
+}
+
+// 因为每个人取到的key都是不一样
+func (g *Group) syncGroupKeyByGroupID(groupID string, operationID string, onGroupKeyNotification bool) {
+	log.NewInfo(operationID, utils.GetSelfFuncName(), "args: ", groupID)
+	g.getGroupKeyByGroupIDFromSvr(groupID, operationID)
+	svrList, err := g.getGroupKeyByGroupIDFromSvr(groupID, operationID)
+	if err != nil {
+		log.NewError(operationID, "getGroupKeyByGroupIDFromSvr failed ", err.Error(), groupID)
+		return
+	}
+	log.NewInfo(operationID, "getGroupKeyByGroupIDFromSvr ", svrList)
+	onServer := common.TransferToLocalGroupKey(svrList)
+	onLocal, err := g.db.GetGroupKeyListByGroupID(groupID)
+	if err != nil {
+		log.NewError(operationID, "GetGroupKeyListByGroupID failed ", err.Error(), groupID)
+		return
+	}
+	//log.NewInfo(operationID, "svrList onServer onLocal", svrList, onServer, onLocal)
+	aInBNot, bInANot, sameA, _ := common.CheckGroupKeyDiff(onServer, onLocal)
+	log.Info(operationID, "getGroupKeyByGroupIDFromSvr  diff ", aInBNot, bInANot, sameA)
+	var insertGroupKeyList []*model_struct.LocalGroupKey
+	for _, index := range aInBNot {
+		if onGroupKeyNotification == false {
+			insertGroupKeyList = append(insertGroupKeyList, onServer[index])
+			continue
+		}
+		err := g.db.InsertGroupKey(onServer[index])
+		if err != nil {
+			log.NewError(operationID, "InsertGroupKey failed ", err.Error(), *onServer[index])
+			continue
+		}
+		if onGroupKeyNotification == true {
+			callbackData := sdk.GroupKeyAddedCallback(*onServer[index])
+			g.listener.OnGroupKeyAdded(utils.StructToJsonString(callbackData))
+			log.Debug(operationID, "OnGroupKeyAdded", utils.StructToJsonString(callbackData))
+		}
+	}
+	if len(insertGroupKeyList) > 0 {
+		split := 1000
+		idx := 0
+		remain := len(insertGroupKeyList) % split
+		log.Warn(operationID, "BatchInsertGroupKey all: ", len(insertGroupKeyList))
+		for idx = 0; idx < len(insertGroupKeyList)/split; idx++ {
+			sub := insertGroupKeyList[idx*split : (idx+1)*split]
+			err = g.db.BatchInsertGroupKey(sub)
+			log.Warn(operationID, "BatchInsertGroupKey len: ", len(sub))
+			if err != nil {
+				log.Error(operationID, "BatchInsertGroupKey failed ", err.Error(), len(sub))
+				for again := 0; again < len(sub); again++ {
+					if err = g.db.InsertGroupKey(sub[again]); err != nil {
+						log.Error(operationID, "InsertGroupKey failed ", err.Error(), sub[again])
+					}
+				}
+			}
+		}
+		if remain > 0 {
+			sub := insertGroupKeyList[idx*split:]
+			log.Warn(operationID, "BatchInsertGroupKey len: ", len(sub))
+			err = g.db.BatchInsertGroupKey(sub)
+			if err != nil {
+				log.Error(operationID, "BatchInsertGroupKey failed ", err.Error(), len(sub))
+				for again := 0; again < len(sub); again++ {
+					if err = g.db.InsertGroupKey(sub[again]); err != nil {
+						log.Error(operationID, "InsertGroupKey failed ", err.Error(), sub[again])
+					}
+				}
+			}
+		}
+	}
 }

@@ -21,6 +21,7 @@ type OnGroupListener interface {
 	OnJoinedGroupDeleted(groupInfo string)
 	OnGroupMemberAdded(groupMemberInfo string)
 	OnGroupMemberDeleted(groupMemberInfo string)
+	OnGroupKeyAdded(groupMemberInfo string)
 	OnGroupApplicationAdded(groupApplication string)
 	OnGroupApplicationDeleted(groupApplication string)
 	OnGroupInfoChanged(groupInfo string)

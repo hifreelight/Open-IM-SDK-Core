@@ -168,6 +168,19 @@ type LocalGroupMember struct {
 	AttachedInfo   string `gorm:"column:attached_info;type:varchar(1024)" json:"attachedInfo"`
 }
 
+// message GroupKey {
+//   string groupID = 1 ;
+//   string key = 2 ;
+//   uint32 createTime = 4;
+//   string ex = 3;
+// }
+type LocalGroupKey struct {
+	GroupID    string `gorm:"column:group_id;primary_key;size:64"`
+	Key        string `gorm:"column:key;primary_key;size:64"`
+	CreateTime uint32 `gorm:"column:create_time" json:"createTime"`
+	Ex         string `gorm:"column:ex;size:1024"`
+}
+
 //message GroupRequest{
 //string UserID = 1;
 //string GroupID = 2;

@@ -71,6 +71,11 @@ type GetGroupMembersInfoCallback []*model_struct.LocalGroupMember
 type KickGroupMemberParam []string
 type KickGroupMemberCallback []*server_api_params.UserIDResult
 
+type GetGroupKeyParam []string
+type GetGroupKeyCallback []*model_struct.LocalGroupKey
+
+
+
 //type TransferGroupOwnerParam
 const TransferGroupOwnerCallback = constant.SuccessCallbackDefault
 

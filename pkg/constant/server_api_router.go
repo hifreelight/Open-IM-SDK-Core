@@ -40,6 +40,8 @@ const (
 	JoinGroupRouter                   = RouterGroup + "/join_group"
 	QuitGroupRouter                   = RouterGroup + "/quit_group"
 	GetGroupsInfoRouter               = RouterGroup + "/get_groups_info"
+	GetGroupKeyListRouter             = RouterGroup + "/get_group_key_list"
+	GetNoEncryptGroupKeyListRouter    = RouterGroup + "/get_no_encrypt_group_key_list"
 	GetGroupAllMemberListRouter       = RouterGroup + "/get_group_all_member_list"
 	GetGroupMembersInfoRouter         = RouterGroup + "/get_group_members_info"
 	InviteUserToGroupRouter           = RouterGroup + "/invite_user_to_group"

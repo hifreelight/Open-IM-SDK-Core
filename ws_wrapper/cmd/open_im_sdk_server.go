@@ -14,6 +14,7 @@ import (
 
 	//	_ "net/http/pprof"
 	_ "net/http/pprof"
+	"open_im_sdk/pkg/common/config"
 	"open_im_sdk/pkg/constant"
 	"open_im_sdk/sdk_struct"
 
@@ -31,6 +32,8 @@ func main() {
 
 		log1.Println(http.ListenAndServe("0.0.0.0:6060", nil))
 	}()
+	log.Info("load  config: ", config.Config)
+
 	var sdkWsPort, openIMApiPort, openIMWsPort, logLevel *int
 	var openIMWsAddress, openIMApiAddress *string
 	//

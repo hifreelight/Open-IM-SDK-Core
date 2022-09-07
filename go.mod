@@ -35,6 +35,8 @@ require (
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	google.golang.org/protobuf v1.28.0
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/sqlite v1.2.6
 	gorm.io/gorm v1.22.4
+
 )
