@@ -76,6 +76,10 @@ func (testGroupListener) OnGroupApplicationRejected(callbackInfo string) {
 	log.Info(utils.OperationIDGenerator(), utils.GetSelfFuncName(), callbackInfo)
 
 }
+func (testGroupListener) OnGroupKeyAdded(callbackInfo string) {
+	log.Info(utils.OperationIDGenerator(), utils.GetSelfFuncName(), callbackInfo)
+
+}
 
 type testOrganizationListener struct {
 }
@@ -289,8 +293,21 @@ type testGetGroupMemberList struct {
 	OperationID string
 }
 
+type testGetGroupKeyList struct {
+	OperationID string
+}
+
 func (t testGetGroupMemberList) OnSuccess(data string) {
 	log.Info(t.OperationID, utils.GetSelfFuncName(), "testGetGroupMemberList: ", data)
+
+}
+
+func (t testGetGroupKeyList) OnError(errCode int32, errMsg string) {
+	log.Info(t.OperationID, utils.GetSelfFuncName(), "testGetGroupKeyList", errCode, errMsg)
+}
+
+func (t testGetGroupKeyList) OnSuccess(data string) {
+	log.Info(t.OperationID, utils.GetSelfFuncName(), "testGetGroupKeyList: ", data)
 
 }
 
@@ -303,6 +320,13 @@ func DotestGetGroupMemberList() {
 	test.OperationID = utils.OperationIDGenerator()
 	var groupId = TestgroupID
 	open_im_sdk.GetGroupMemberList(test, test.OperationID, groupId, 0, 0, 100)
+}
+
+func DotestGetGroupKeyList() {
+	var test testGetGroupKeyList
+	test.OperationID = utils.OperationIDGenerator()
+	var groupId = TestgroupID
+	open_im_sdk.GetGroupKeyList(test, test.OperationID, groupId, 0, 100)
 }
 
 func DotestCos() {

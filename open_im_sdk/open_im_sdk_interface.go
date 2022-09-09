@@ -322,6 +322,15 @@ func GetGroupMemberList(callback open_im_sdk_callback.Base, operationID string, 
 	userForSDK.Group().GetGroupMemberList(callback, groupID, filter, offset, count, operationID)
 }
 
+func GetGroupKeyList(callback open_im_sdk_callback.Base, operationID string, groupID string, offset, count int32) {
+	if err := CheckResourceLoad(userForSDK); err != nil {
+		log.Error(operationID, "resource loading is not completed ", err.Error())
+		callback.OnError(constant.ErrResourceLoadNotComplete.ErrCode, constant.ErrResourceLoadNotComplete.ErrMsg)
+		return
+	}
+	userForSDK.Group().GetGroupKeyList(callback, groupID, operationID, offset, count)
+}
+
 func GetGroupMemberOwnerAndAdmin(callback open_im_sdk_callback.Base, operationID string, groupID string) {
 	if err := CheckResourceLoad(userForSDK); err != nil {
 		log.Error(operationID, "resource loading is not completed ", err.Error())

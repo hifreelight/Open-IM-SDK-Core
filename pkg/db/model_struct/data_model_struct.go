@@ -175,10 +175,10 @@ type LocalGroupMember struct {
 //   string ex = 3;
 // }
 type LocalGroupKey struct {
-	GroupID    string `gorm:"column:group_id;primary_key;size:64"`
-	Key        string `gorm:"column:key;primary_key;size:64"`
+	GroupID    string `gorm:"column:group_id;primary_key;size:64" json:"groupID"`
+	Key        string `gorm:"column:key;primary_key;size:64" json:"key"`
 	CreateTime uint32 `gorm:"column:create_time" json:"createTime"`
-	Ex         string `gorm:"column:ex;size:1024"`
+	Ex         string `gorm:"column:ex;size:1024" json:"ex"`
 }
 
 //message GroupRequest{

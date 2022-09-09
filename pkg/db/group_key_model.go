@@ -14,12 +14,11 @@ func (d *DataBase) GetAllGroupKeyList() ([]model_struct.LocalGroupKey, error) {
 }
 
 // 需求是只保留最近三天， 这里取最多100条
-func (d *DataBase) GetGroupKeyListByGroupID(groupID string) ([]*model_struct.LocalGroupKey, error) {
+func (d *DataBase) GetGroupKeyListByGroupID(groupID string, offset, count int32) ([]*model_struct.LocalGroupKey, error) {
 	d.mRWMutex.Lock()
 	defer d.mRWMutex.Unlock()
 	var groupKeyList []model_struct.LocalGroupKey
-	var count int = 100
-	err := d.conn.Where("group_id = ? ", groupID).Order("create_time DESC").Limit(count).Find(&groupKeyList).Error
+	err := d.conn.Where("group_id = ? ", groupID).Order("create_time DESC").Offset(int(offset)).Limit(int(count)).Find(&groupKeyList).Error
 	var transfer []*model_struct.LocalGroupKey
 	for _, v := range groupKeyList {
 		v1 := v

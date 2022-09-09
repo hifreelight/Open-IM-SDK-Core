@@ -10,6 +10,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.9
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.1
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0
+	github.com/ethereum/go-ethereum v1.10.21
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.8
@@ -30,9 +32,7 @@ require (
 	github.com/smartystreets/assertions v1.1.0 // indirect
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.33
 	github.com/tencentyun/qcloud-cos-sts-sdk v0.0.0-20220106031843-2efeb10ca2f6
-	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v3 v3.0.1

@@ -1,6 +1,7 @@
 package group
 
 import (
+	"encoding/hex"
 	"errors"
 	comm "open_im_sdk/internal/common"
 	ws "open_im_sdk/internal/interaction"
@@ -14,6 +15,7 @@ import (
 	sdk "open_im_sdk/pkg/sdk_params_callback"
 	api "open_im_sdk/pkg/server_api_params"
 	"open_im_sdk/pkg/utils"
+	crypto "open_im_sdk/pkg/utils/crypto"
 	"open_im_sdk/sdk_struct"
 	"sync"
 
@@ -1086,16 +1088,35 @@ func (g *Group) searchGroupMembers(callback open_im_sdk_callback.Base, searchPar
 	return members
 }
 
-// func (g *Group) GetGroupKeyList(callback open_im_sdk_callback.Base, groupID string, userIDList sdk.GetGroupKeyParam, operationID string) sdk.GetGroupKeyCallback {
-// 	groupKeyList, err := g.db.GetGroupKeyListByGroupID(groupID)
-// 	common.CheckDBErrCallback(callback, err, operationID)
-// 	return groupKeyList
-// }
+func (g *Group) isInGroup(groupID, userID string) bool {
+	member, err := g.db.GetGroupMemberByUserID(groupID, userID)
+	if err != nil {
+		return false
+	}
+	if member != nil {
+		return true
+	}
+	return false
+}
 
-func (g *Group) GetGroupKeyList(callback open_im_sdk_callback.Base, groupID string, userIDList sdk.GetGroupKeyParam, operationID string) sdk.GetGroupKeyCallback {
-	// TODO: in group ?
-	// encrypt
-	groupKeyList, err := g.db.GetGroupKeyListByGroupID(groupID)
+func (g *Group) getGroupKeyList(callback open_im_sdk_callback.Base, groupID string, offset, count int32, operationID string) sdk.GetGroupKeyCallback {
+	// in group
+	user, err := g.db.GetLoginUser()
+	if !g.isInGroup(groupID, user.UserID) {
+		return []*model_struct.LocalGroupKey{}
+	}
+	if count > 100 {
+		count = 100
+	}
+	groupKeyList, err := g.db.GetGroupKeyListByGroupID(groupID, offset, count)
+
+	for i, v := range groupKeyList {
+		// encrypt
+		serializedCiphertext := crypto.Encrypt(user.PubKey, v.Key, "")
+		groupKeyList[i].Key = hex.EncodeToString(serializedCiphertext)
+
+	}
+
 	common.CheckDBErrCallback(callback, err, operationID)
 	return groupKeyList
 }
@@ -1127,7 +1148,7 @@ func (g *Group) syncGroupKeyByGroupID(groupID string, operationID string, onGrou
 	}
 	log.NewInfo(operationID, "getGroupKeyByGroupIDFromSvr ", svrList)
 	onServer := common.TransferToLocalGroupKey(svrList)
-	onLocal, err := g.db.GetGroupKeyListByGroupID(groupID)
+	onLocal, err := g.db.GetGroupKeyListByGroupID(groupID, 0, 100)
 	if err != nil {
 		log.NewError(operationID, "GetGroupKeyListByGroupID failed ", err.Error(), groupID)
 		return

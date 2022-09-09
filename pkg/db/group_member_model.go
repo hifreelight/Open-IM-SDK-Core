@@ -139,6 +139,13 @@ func (d *DataBase) GetGroupMemberUIDListByGroupID(groupID string) (result []stri
 	return result, utils.Wrap(err, "GetGroupMemberListByGroupID failed ")
 }
 
+func (d *DataBase) GetGroupMemberByUserID(groupID, userID string) (*model_struct.LocalGroupMember, error) {
+	d.mRWMutex.Lock()
+	defer d.mRWMutex.Unlock()
+	groupMember := model_struct.LocalGroupMember{}
+	return &groupMember, utils.Wrap(d.conn.Where("group_id=? and user_id=?", groupID, userID).First(&groupMember).Error, "GetGroupMemberByUserID failed")
+}
+
 func (d *DataBase) InsertGroupMember(groupMember *model_struct.LocalGroupMember) error {
 	d.mRWMutex.Lock()
 	defer d.mRWMutex.Unlock()

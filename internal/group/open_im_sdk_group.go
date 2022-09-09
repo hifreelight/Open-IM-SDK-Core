@@ -235,6 +235,20 @@ func (g *Group) GetGroupMemberList(callback open_im_sdk_callback.Base, groupID s
 		log.NewInfo(operationID, fName, " callback: ", utils.StructToJsonStringDefault(groupMemberList))
 	}()
 }
+
+func (g *Group) GetGroupKeyList(callback open_im_sdk_callback.Base, groupID string, operationID string, offset, count int32) {
+	if callback == nil {
+		return
+	}
+	fName := utils.GetSelfFuncName()
+	go func() {
+		log.NewInfo(operationID, fName, "args: ", groupID, offset, count)
+		groupKeyList := g.getGroupKeyList(callback, groupID, offset, count, operationID)
+		callback.OnSuccess(utils.StructToJsonStringDefault(groupKeyList))
+		log.NewInfo(operationID, fName, " callback: ", utils.StructToJsonStringDefault(groupKeyList))
+	}()
+
+}
 func (g *Group) GetGroupMemberOwnerAndAdmin(callback open_im_sdk_callback.Base, groupID string, operationID string) {
 	if callback == nil {
 		return

@@ -41,7 +41,7 @@ func (TestSendImg) OnProgress(progress int) {
 
 func TestLog(v ...interface{}) {
 	//X.SetFlags(X.Lshortfile | X.LstdFlags)
-	loggerf.Println(v)
+	loggerf.Println(v...)
 	a, b, c, d := runtime.Caller(1)
 	X.Println(a, b, c, d)
 }

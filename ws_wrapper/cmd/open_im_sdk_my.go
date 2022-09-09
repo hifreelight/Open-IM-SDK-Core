@@ -16,7 +16,7 @@ import (
 	"sync"
 )
 
-func main() {
+func mainMy() {
 	var sdkWsPort, openIMApiPort, openIMWsPort *int
 	//var openIMWsAddress, openIMApiAddress *string
 	APIADDR := "http://43.128.5.63:10000"
